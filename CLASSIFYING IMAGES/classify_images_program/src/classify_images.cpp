@@ -1,26 +1,15 @@
 /***************************************************************************
  *                                                                         *
- * YouBotArm Demo Programm                                                 *
+ * CLASSIFY IMAGES                                               *
  *                                                                         *
  * Authors:                                                                *
- *   Johannes Michael <johannes.michael@unibw.de>                          *
+ *   Edgar Alarcon <edgaroriolalarconpalma@gmail.com>                          *
  *                                                                         *
  ***************************************************************************/
-/***************objectmarker.cpp******************
+/***************classify_images.cpp******************
 
-Objectmarker for marking the objects to be detected  from positive samples and then creating the
+Object marker for marking the objects to be detected  from positive samples and then creating the
 description file for positive images.
-
-compile this code and run with two arguments, first one the name of the descriptor file and the second one
-the address of the directory in which the positive images are located
-
-while running this code, each image in the given directory will open up. Now mark the edges of the object using the mouse buttons
-  then press then press "SPACE" to save the selected region, or any other key to discard it. Then use "B" to move to next image. the program automatically
-  quits at the end. press ESC at anytime to quit.
-
-  *the key B was chosen  to move to the next image because it is closer to SPACE key and nothing else.....
-
-author: achu_wilson@rediffmail.com
 */
 
 
@@ -96,22 +85,11 @@ int main()
     string strPrefix;
     string strPostfix;
     string input_directory;
-    string output_file;
     string output_directory;
-    string output_file2;
-/*
-    if(argc != 3) {
-        fprintf(stderr, "%s output_info.txt raw/data/directory/\n", argv[0]);
-        return -1;
-    }
 
-    input_directory = argv[2];
-    output_file = argv[1];*/
+    input_directory ="../not_classified_images";
+    output_directory="..";
 
-    output_file ="../positive_images/positives.txt";
-    output_file2 ="../positive_images/cropped_positives.txt";
-    input_directory ="/home/edgar/HAAR_TRAINING/positive_images/images";
-    output_directory="/home/edgar/HAAR_TRAINING/positive_images/cropped";
     /* Get a file listing of all files with in the input directory */
     DIR    *dir_p = opendir (input_directory.c_str());
     struct dirent *dir_entry_p;
@@ -121,19 +99,13 @@ int main()
         return -1;
     }
 
-    fprintf(stderr, "Object Marker: Input Directory: %s  Output File: %s\n", input_directory.c_str(), output_file.c_str());
-
-
     cvAddSearchPath(input_directory);
     cvNamedWindow(window_name,1);
     cvSetMouseCallback(window_name,on_mouse, NULL);
 
-    fprintf(stderr, "Opening directory...");
-
-    ofstream output(output_file.c_str());
-    ofstream output2(output_file2.c_str());
-    fprintf(stderr, "done.\n");
     int num_imagen=0;
+    fprintf(stderr, "For each image:  \n <Space>    add rectangle to current image \n <ENTER>    save added rectangles and show next image\n  <z>   send image to negative images folder\n <ESC>   exit program\n");
+
     while((dir_entry_p = readdir(dir_p)) != NULL)
     {
         numOfRec=0;
@@ -174,8 +146,6 @@ int main()
 
                         cvReleaseImage(&image);
                         cvDestroyWindow(window_name);
-                        output.close();
-                        output2.close();
                         return 0;
                 case 32:
 
@@ -205,28 +175,25 @@ int main()
             if(numOfRec>0 && iKey==13)
             {
 
-                output << ("/images/"+strPrefix).c_str() << " "<< numOfRec << strPostfix <<"\n";
-                output2 << ("/cropped/cropped_"+strPrefix).c_str()<<"\n";
-
                 cvSetImageROI(image,cvRect(roi_x0,roi_y0,roi_x1-roi_x0,roi_y1-roi_y0));
                 IplImage *cropped = cvCreateImage(cvGetSize(image),image->depth,image->nChannels);
                 cvCopy(image, cropped, NULL);
                 cvResetImageROI(image);
-                cvSaveImage((output_directory+"/cropped_"+strPrefix).c_str(),cropped);
+                cvSaveImage((output_directory+"/cropped_positive_images/cropped_"+strPrefix).c_str(),cropped);
+                rename ((input_directory+"/"+strPrefix).c_str(), (output_directory+"/positive_images/"+strPrefix).c_str());
                 cvReleaseImage(&image);
             }
 
 
             if (iKey==122){
-                rename ((input_directory+"/"+strPrefix).c_str(), (input_directory+"/negatives/"+strPrefix).c_str());
+                rename ((input_directory+"/"+strPrefix).c_str(), (output_directory+"/negative_images/"+strPrefix).c_str());
                 cvReleaseImage(&image);
             }
     }
-    else fprintf(stderr,"NOT LOADED CORRECTLY\n");
+//    else fprintf(stderr,"NOT LOADED CORRECTLY\n");
     }
 
-    output.close();
-    output2.close();
+
     cvDestroyWindow(window_name);
     closedir(dir_p);
 
