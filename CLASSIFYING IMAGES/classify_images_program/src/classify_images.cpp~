@@ -87,7 +87,7 @@ int main()
     string input_directory;
     string output_directory;
 
-    input_directory ="../non_classified_images";
+    input_directory ="../not_classified_images";
     output_directory="..";
 
     /* Get a file listing of all files with in the input directory */
